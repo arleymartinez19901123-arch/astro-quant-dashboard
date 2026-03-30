@@ -26,10 +26,17 @@ def obtener_datos():
         if len(cols) >= 3:
             datos.append([
                 cols[0].text.strip(),
-                cols[1].text.strip().zfill(4),
+                numero_raw = cols[1].text.strip()
+
+# limpiar solo números
+numero = ''.join(filter(str.isdigit, numero_raw)).zfill(4)
                 cols[2].text.strip()
             ])
-
+datos.append([
+    cols[0].text.strip(),
+    numero,
+    cols[2].text.strip()
+])df = df[df["Numero"].str.match(r"^\d{4}$")]
     df = pd.DataFrame(datos, columns=["Fecha", "Numero", "Signo"])
     return df
 
@@ -37,7 +44,10 @@ def obtener_datos():
 # 🔢 ANALISIS
 # =========================
 def analisis(df):
-    digitos = [d for n in df["Numero"] for d in n]
+    digitos = []
+    for n in df["Numero"]:
+        if n.isdigit():
+            digitos.extend(list(n))
     return Counter(digitos)
 
 # =========================
@@ -47,7 +57,7 @@ def generar_jugadas_real(df, n=5):
     digitos = [d for n in df["Numero"][:50] for d in n]
     freq = Counter(digitos)
 
-    nums = list(freq.keys())
+    nums = [int(n) for n in freq.keys() if str(n).isdigit()]
     pesos = list(freq.values())
 
     signos = ["Aries","Tauro","Geminis","Cancer","Leo","Virgo",

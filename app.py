@@ -25,8 +25,8 @@ def obtener_datos():
         cols = f.find_all("td")
         if len(cols) >= 3:
             datos.append([
-                cols[0].text.strip(),
-                for cols in filas:
+        (cols[0].text.strip(), cols[1].text.strip())
+for cols in filas
     if len(cols) > 1:
         numero_raw = cols[1].text.strip()
 

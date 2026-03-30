@@ -18,7 +18,7 @@ def obtener_datos():
     r = requests.get(url)
     soup = BeautifulSoup(r.text, "html.parser")
 
-      datos = []
+    datos = []
 
 for f in filas[1:]:
     cols = f.find_all("td")

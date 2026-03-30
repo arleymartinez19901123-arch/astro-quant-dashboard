@@ -31,7 +31,7 @@ for f in filas[1:]:
 
 # limpiar solo números
 numero = ''.join(filter(str.isdigit, numero_raw)).zfill(4)
-                cols[2].text.strip()
+    cols[2].text.strip()
             ])
 datos.append([
     cols[0].text.strip(),

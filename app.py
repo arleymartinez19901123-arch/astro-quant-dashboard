@@ -15,11 +15,17 @@ st.set_page_config(page_title="Astro Luna Quant", layout="wide")
 @st.cache_data(ttl=300)
 def obtener_datos():
     url = "https://resultadodelaloteria.com/colombia/astro-luna"
-    r = requests.get(url)
+
+    try:
+        r = requests.get(url, timeout=10)
+        r.raise_for_status()
+    except:
+        return pd.DataFrame(columns=["Fecha", "Numero", "Signo"])
+
     soup = BeautifulSoup(r.text, "html.parser")
 
-def procesar_filas(filas):
     datos = []
+    filas = soup.select("table tr")
 
     for f in filas[1:]:
         cols = f.find_all("td")
@@ -27,7 +33,7 @@ def procesar_filas(filas):
         if len(cols) >= 3:
             numero_raw = cols[1].text.strip()
 
-            # limpiar solo números
+            # limpiar número correctamente
             numero = ''.join(filter(str.isdigit, numero_raw)).zfill(4)
 
             datos.append([
@@ -37,40 +43,50 @@ def procesar_filas(filas):
             ])
 
     df = pd.DataFrame(datos, columns=["Fecha", "Numero", "Signo"])
-    df = df[df["Numero"].str.match(r"^\d{4}$")]
+
+    # filtrar solo números válidos
+    df = df[df["Numero"].str.match(r"^\d{4}$", na=False)]
 
     return df
+
 
 # =========================
 # 🔢 ANALISIS
 # =========================
 def analisis(df):
-    digitos = []
-    for n in df["Numero"]:
-        if n.isdigit():
-            digitos.extend(list(n))
+    if df.empty:
+        return Counter()
+
+    digitos = [d for n in df["Numero"] for d in str(n)]
     return Counter(digitos)
+
 
 # =========================
 # 🔮 GENERADOR INTELIGENTE
 # =========================
 def generar_jugadas_real(df, n=5):
-    digitos = [d for n in df["Numero"][:50] for d in n]
+    if df.empty:
+        return []
+
+    digitos = [d for n in df["Numero"][:50] for d in str(n)]
     freq = Counter(digitos)
 
-    nums = [int(n) for n in freq.keys() if str(n).isdigit()]
+    nums = list(freq.keys())
     pesos = list(freq.values())
 
-    signos = ["Aries","Tauro","Geminis","Cancer","Leo","Virgo",
-              "Libra","Escorpio","Sagitario","Capricornio","Acuario","Piscis"]
+    signos = [
+        "Aries","Tauro","Geminis","Cancer","Leo","Virgo",
+        "Libra","Escorpio","Sagitario","Capricornio","Acuario","Piscis"
+    ]
 
     jugadas = []
 
     for _ in range(n):
-        num = "".join(str(random.choices(nums, pesos)[0]) for _ in range(4))
+        num = "".join(random.choices(nums, pesos, k=4))
         jugadas.append((num, random.choice(signos)))
 
     return jugadas
+
 
 # =========================
 # 🖥️ UI
@@ -113,13 +129,19 @@ st.dataframe(df.head(50), use_container_width=True)
 # =========================
 st.subheader("🔢 Frecuencia de dígitos")
 freq = analisis(df)
-st.bar_chart(pd.DataFrame(freq.values(), index=freq.keys()))
+
+if freq:
+    st.bar_chart(pd.DataFrame(freq.values(), index=freq.keys()))
+else:
+    st.info("Sin datos para analizar")
 
 # =========================
 # 🔥 TENDENCIAS
 # =========================
 st.subheader("🔥 Dígitos calientes")
-st.write(freq.most_common(5))
+
+if freq:
+    st.write(freq.most_common(5))
 
 # =========================
 # 🧠 ANÁLISIS AUTOMÁTICO
@@ -139,12 +161,14 @@ st.subheader("🔮 Jugadas sugeridas (modo quant)")
 
 jugadas = generar_jugadas_real(df)
 
-for num, signo in jugadas:
-    st.write(f"👉 {num} - {signo}")
+if jugadas:
+    for num, signo in jugadas:
+        st.write(f"👉 {num} - {signo}")
+else:
+    st.info("Esperando datos para generar jugadas")
 
 # =========================
-# 🔄 AUTO REFRESH
+# 🔄 AUTO REFRESH (MEJORADO)
 # =========================
 st.caption("Actualizando cada 5 minutos...")
-time.sleep(300)
-st.rerun()
+st.experimental_rerun()

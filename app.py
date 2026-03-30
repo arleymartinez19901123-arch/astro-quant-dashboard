@@ -5,74 +5,46 @@ from bs4 import BeautifulSoup
 import random
 from collections import Counter
 from datetime import datetime
+import time
 
 st.set_page_config(page_title="Astro Luna Quant", layout="wide")
 
 # =========================
-# 📡 SCRAPER LIMPIO
+# 📡 SCRAPER
 # =========================
 @st.cache_data(ttl=300)
 def obtener_datos():
     url = "https://resultadodelaloteria.com/colombia/astro-luna"
+    r = requests.get(url)
+    soup = BeautifulSoup(r.text, "html.parser")
 
-    try:
-        r = requests.get(url, timeout=10)
-        soup = BeautifulSoup(r.text, "html.parser")
+    datos = []
+    filas = soup.select("table tr")
 
-        datos = []
-        filas = soup.select("table tr")
+    for f in filas[1:]:
+        cols = f.find_all("td")
+        if len(cols) >= 3:
+            datos.append([
+                cols[0].text.strip(),
+                cols[1].text.strip().zfill(4),
+                cols[2].text.strip()
+            ])
 
-        for f in filas:
-            cols = f.find_all("td")
-
-            if len(cols) >= 3:
-                fecha = cols[0].text.strip()
-                numero_raw = cols[1].text.strip()
-                signo = cols[2].text.strip()
-
-                # 🔥 LIMPIEZA REAL
-                numero = ''.join(c for c in numero_raw if c.isdigit())
-
-                # SOLO números válidos
-                if len(numero) == 4:
-                    datos.append([fecha, numero, signo])
-
-        df = pd.DataFrame(datos, columns=["Fecha", "Numero", "Signo"])
-
-        return df.drop_duplicates().reset_index(drop=True)
-
-    except:
-        return pd.DataFrame(columns=["Fecha", "Numero", "Signo"])
+    df = pd.DataFrame(datos, columns=["Fecha", "Numero", "Signo"])
+    return df
 
 # =========================
-# 🔢 ANALISIS LIMPIO
+# 🔢 ANALISIS
 # =========================
 def analisis(df):
-    digitos = []
-
-    for n in df["Numero"]:
-        if n.isdigit():
-            digitos.extend(list(n))
-
+    digitos = [d for n in df["Numero"] for d in n]
     return Counter(digitos)
 
 # =========================
-# 🔮 GENERADOR CORREGIDO
+# 🔮 GENERADOR INTELIGENTE
 # =========================
 def generar_jugadas_real(df, n=5):
-
-    if df.empty:
-        return []
-
-    digitos = []
-
-    for n in df["Numero"].head(50):
-        if n.isdigit():
-            digitos.extend(list(n))
-
-    if not digitos:
-        return []
-
+    digitos = [d for n in df["Numero"][:50] for d in n]
     freq = Counter(digitos)
 
     nums = list(freq.keys())
@@ -84,8 +56,8 @@ def generar_jugadas_real(df, n=5):
     jugadas = []
 
     for _ in range(n):
-        numero = "".join(random.choices(nums, weights=pesos, k=4))
-        jugadas.append((numero, random.choice(signos)))
+        num = "".join(str(random.choices(nums, pesos)[0]) for _ in range(4))
+        jugadas.append((num, random.choice(signos)))
 
     return jugadas
 
@@ -94,10 +66,11 @@ def generar_jugadas_real(df, n=5):
 # =========================
 st.title("📊 Astro Luna Quant Dashboard PRO")
 
+# Obtener datos
 df = obtener_datos()
 
 # =========================
-# 🟢 RESULTADO
+# 🟢 ÚLTIMO RESULTADO
 # =========================
 st.subheader("🟢 Último resultado en tiempo real")
 
@@ -109,69 +82,58 @@ else:
     st.error("No se pudieron cargar los datos")
 
 # =========================
-# ⏰ ESTADO
+# ⏰ ESTADO DEL SORTEO
 # =========================
 hora = datetime.now().hour
 
 if hora >= 22:
-    st.success("🟢 Resultado disponible")
+    st.success("🟢 Resultado ya disponible")
 else:
-    st.warning("⏳ Esperando sorteo")
+    st.warning("⏳ Esperando sorteo de hoy")
 
 # =========================
 # 📈 HISTÓRICO
 # =========================
 st.subheader("📈 Histórico reciente")
-
-if not df.empty:
-    st.dataframe(df.head(50), use_container_width=True)
+st.dataframe(df.head(50), use_container_width=True)
 
 # =========================
-# 🔢 FRECUENCIA
+# 🔢 FRECUENCIA DE DÍGITOS
 # =========================
 st.subheader("🔢 Frecuencia de dígitos")
-
 freq = analisis(df)
-
-if freq:
-    df_freq = pd.DataFrame(freq.values(), index=freq.keys(), columns=["Frecuencia"])
-    st.bar_chart(df_freq)
+st.bar_chart(pd.DataFrame(freq.values(), index=freq.keys()))
 
 # =========================
 # 🔥 TENDENCIAS
 # =========================
 st.subheader("🔥 Dígitos calientes")
-
-if freq:
-    st.write(freq.most_common(5))
+st.write(freq.most_common(5))
 
 # =========================
-# 🧠 ANALISIS
+# 🧠 ANÁLISIS AUTOMÁTICO
 # =========================
 st.subheader("🧠 Análisis automático")
 
 if "7" in freq:
-    st.write("📌 El dígito 7 está fuerte")
+    st.write("📌 Tendencia detectada: el dígito 7 está fuerte")
 
 if "0" in freq:
-    st.write("📌 El dígito 0 está fuerte")
+    st.write("📌 Tendencia detectada: el dígito 0 está fuerte")
 
 # =========================
 # 🔮 JUGADAS
 # =========================
-st.subheader("🔮 Jugadas sugeridas")
+st.subheader("🔮 Jugadas sugeridas (modo quant)")
 
 jugadas = generar_jugadas_real(df)
 
-if jugadas:
-    for num, signo in jugadas:
-        st.write(f"👉 {num} - {signo}")
-else:
-    st.warning("No hay datos suficientes")
+for num, signo in jugadas:
+    st.write(f"👉 {num} - {signo}")
 
 # =========================
-# 🔄 ACTUALIZAR
+# 🔄 AUTO REFRESH
 # =========================
-if st.button("🔄 Actualizar ahora"):
-    st.cache_data.clear()
-    st.rerun()
+st.caption("Actualizando cada 5 minutos...")
+time.sleep(300)
+st.rerun()

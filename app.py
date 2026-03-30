@@ -1,12 +1,19 @@
-import streamlit as st import pandas as pd import requests from bs4 import BeautifulSoup import random from collections import Counter from datetime import datetime import time
+import streamlit as st
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+import random
+from collections import Counter
+from datetime import datetime
+import time
 
 st.set_page_config(page_title="Astro Luna Quant", layout="wide")
 
-=========================
+#=========================
 
-SCRAPER
+#SCRAPER
 
-=========================
+#=========================
 
 @st.cache_data(ttl=300) def obtener_datos(): url = "https://resultadodelaloteria.com/colombia/astro-luna" r = requests.get(url) soup = BeautifulSoup(r.text, "html.parser")
 
@@ -24,19 +31,19 @@ for f in filas[1:]:
 
 return pd.DataFrame(datos, columns=["Fecha", "Numero", "Signo"])
 
-=========================
+#=========================
 
-ANALISIS
+#ANALISIS
 
-=========================
+#=========================
 
 def analisis(df): digitos = [d for n in df["Numero"] for d in n] return Counter(digitos)
 
-=========================
+#=========================
 
-GENERADOR INTELIGENTE
+#GENERADOR INTELIGENTE
 
-=========================
+#=========================
 
 def generar_jugadas_real(df, n=5): digitos = [d for n in df["Numero"][:50] for d in n] freq = Counter(digitos)
 
@@ -54,11 +61,11 @@ for _ in range(n):
 
 return jugadas
 
-=========================
+#=========================
 
-UI
+#UI
 
-=========================
+#=========================
 
 st.title("📊 Astro Luna Quant Dashboard PRO")
 
@@ -66,11 +73,11 @@ Obtener datos
 
 df = obtener_datos()
 
-=========================
+#=========================
 
-ULTIMO RESULTADO
+#ULTIMO RESULTADO
 
-=========================
+#=========================
 
 st.subheader("🟢 Último resultado en tiempo real")
 
@@ -78,55 +85,55 @@ ultimo = df.iloc[0]
 
 st.success(f"🎯 {ultimo['Numero']} - {ultimo['Signo']}") st.caption(f"📅 Fecha: {ultimo['Fecha']}")
 
-=========================
+#=========================
 
-ESTADO DEL SORTEO
+#ESTADO DEL SORTEO
 
-=========================
+#=========================
 
 hora = datetime.now().hour
 
 if hora >= 22: st.success("🟢 Resultado ya disponible") else: st.warning("⏳ Esperando sorteo de hoy")
 
-=========================
+#=========================
 
-HISTORICO
+#HISTORICO
 
-=========================
+#=========================
 
 st.subheader("📈 Histórico reciente") st.dataframe(df.head(50), use_container_width=True)
 
-=========================
+#=========================
 
-FRECUENCIAS
+#FRECUENCIAS
 
-=========================
+#=========================
 
 st.subheader("🔢 Frecuencia de dígitos") freq = analisis(df) st.bar_chart(pd.DataFrame(freq.values(), index=freq.keys()))
 
-=========================
+#=========================
 
-TENDENCIAS
+#TENDENCIAS
 
-=========================
+#=========================
 
 st.subheader("🔥 Dígitos calientes") st.write(freq.most_common(5))
 
-=========================
+#=========================
 
-ANALISIS IA
+#ANALISIS IA
 
-=========================
+#=========================
 
 st.subheader("🧠 Análisis automático")
 
 if "7" in freq: st.write("📌 Tendencia detectada: el dígito 7 está fuerte")
 
-=========================
+#=========================
 
-JUGADAS
+#JUGADAS
 
-=========================
+#=========================
 
 st.subheader("🔮 Jugadas sugeridas (modo quant)")
 
@@ -134,10 +141,10 @@ jugadas = generar_jugadas_real(df)
 
 for j in jugadas: st.write(f"👉 {j[0]} - {j[1]}")
 
-=========================
+#=========================
 
-AUTO REFRESH
+#AUTO REFRESH
 
-=========================
+#=========================
 
 time.sleep(300) st.rerun()

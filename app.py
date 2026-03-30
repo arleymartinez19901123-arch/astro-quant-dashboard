@@ -10,7 +10,7 @@ import time
 st.set_page_config(page_title="Astro Luna Quant", layout="wide")
 
 # =========================
-# 📡 SCRAPER
+# 📡 SCRAPER LIMPIO
 # =========================
 @st.cache_data(ttl=300)
 def obtener_datos():
@@ -24,27 +24,42 @@ def obtener_datos():
     for f in filas[1:]:
         cols = f.find_all("td")
         if len(cols) >= 3:
-            datos.append([
-                cols[0].text.strip(),
-                cols[1].text.strip().zfill(4),
-                cols[2].text.strip()
-            ])
+
+            fecha = cols[0].text.strip()
+            numero_raw = cols[1].text.strip()
+            signo = cols[2].text.strip()
+
+            # 🔥 limpiar solo números
+            numero = ''.join(filter(str.isdigit, numero_raw)).zfill(4)
+
+            datos.append([fecha, numero, signo])
 
     df = pd.DataFrame(datos, columns=["Fecha", "Numero", "Signo"])
+
+    # 🔒 FILTRO: solo números válidos de 4 dígitos
+    df = df[df["Numero"].str.match(r"^\d{4}$")]
+
     return df
 
 # =========================
-# 🔢 ANALISIS
+# 🔢 ANALISIS LIMPIO
 # =========================
 def analisis(df):
-    digitos = [d for n in df["Numero"] for d in n]
+    digitos = []
+    for n in df["Numero"]:
+        if n.isdigit():
+            digitos.extend(list(n))
     return Counter(digitos)
 
 # =========================
 # 🔮 GENERADOR INTELIGENTE
 # =========================
 def generar_jugadas_real(df, n=5):
-    digitos = [d for n in df["Numero"][:50] for d in n]
+    digitos = []
+    for n in df["Numero"][:50]:
+        if n.isdigit():
+            digitos.extend(list(n))
+
     freq = Counter(digitos)
 
     nums = list(freq.keys())
@@ -66,11 +81,10 @@ def generar_jugadas_real(df, n=5):
 # =========================
 st.title("📊 Astro Luna Quant Dashboard PRO")
 
-# Obtener datos
 df = obtener_datos()
 
 # =========================
-# 🟢 ÚLTIMO RESULTADO
+# 🟢 ÚLTIMO RESULTADO CORRECTO
 # =========================
 st.subheader("🟢 Último resultado en tiempo real")
 
@@ -92,26 +106,32 @@ else:
     st.warning("⏳ Esperando sorteo de hoy")
 
 # =========================
-# 📈 HISTÓRICO
+# 📈 HISTÓRICO LIMPIO
 # =========================
 st.subheader("📈 Histórico reciente")
 st.dataframe(df.head(50), use_container_width=True)
 
 # =========================
-# 🔢 FRECUENCIA DE DÍGITOS
+# 🔢 FRECUENCIA LIMPIA
 # =========================
 st.subheader("🔢 Frecuencia de dígitos")
 freq = analisis(df)
-st.bar_chart(pd.DataFrame(freq.values(), index=freq.keys()))
+
+df_freq = pd.DataFrame({
+    "digito": list(freq.keys()),
+    "frecuencia": list(freq.values())
+}).set_index("digito")
+
+st.bar_chart(df_freq)
 
 # =========================
-# 🔥 TENDENCIAS
+# 🔥 TENDENCIAS REALES
 # =========================
 st.subheader("🔥 Dígitos calientes")
 st.write(freq.most_common(5))
 
 # =========================
-# 🧠 ANÁLISIS AUTOMÁTICO
+# 🧠 ANÁLISIS IA SIMPLE
 # =========================
 st.subheader("🧠 Análisis automático")
 
@@ -122,7 +142,7 @@ if "0" in freq:
     st.write("📌 Tendencia detectada: el dígito 0 está fuerte")
 
 # =========================
-# 🔮 JUGADAS
+# 🔮 JUGADAS LIMPIAS
 # =========================
 st.subheader("🔮 Jugadas sugeridas (modo quant)")
 

@@ -1,5 +1,11 @@
-
-import streamlit as st import pandas as pd import requests from bs4 import BeautifulSoup import random from collections import Counter from datetime import datetime import time
+import streamlit as st
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+import random
+from collections import Counter
+from datetime import datetime
+import time
 
 st.set_page_config(page_title="Astro Luna Quant", layout="wide")
 

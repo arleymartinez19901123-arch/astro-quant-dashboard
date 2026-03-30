@@ -18,28 +18,28 @@ def obtener_datos():
     r = requests.get(url)
     soup = BeautifulSoup(r.text, "html.parser")
 
+    def procesar_filas(filas):
     datos = []
 
-for f in filas[1:]:
-    cols = f.find_all("td")
+    for f in filas[1:]:
+        cols = f.find_all("td")
 
-    if len(cols) >= 3:
-        numero_raw = cols[1].text.strip()
+        if len(cols) >= 3:
+            numero_raw = cols[1].text.strip()
 
-        # limpiar solo números
-        numero = ''.join(filter(str.isdigit, numero_raw)).zfill(4)
+            # limpiar solo números
+            numero = ''.join(filter(str.isdigit, numero_raw)).zfill(4)
 
-        datos.append([
-            cols[0].text.strip(),  # Fecha
-            numero,                # Numero limpio
-            cols[2].text.strip()  # Signo
-        ])
+            datos.append([
+                cols[0].text.strip(),  # Fecha
+                numero,                # Numero limpio
+                cols[2].text.strip()  # Signo
+            ])
 
-df = pd.DataFrame(datos, columns=["Fecha", "Numero", "Signo"])
+    df = pd.DataFrame(datos, columns=["Fecha", "Numero", "Signo"])
+    df = df[df["Numero"].str.match(r"^\d{4}$")]
 
-df = df[df["Numero"].str.match(r"^\d{4}$")]
-
-return df
+    return df
 
 # =========================
 # 🔢 ANALISIS

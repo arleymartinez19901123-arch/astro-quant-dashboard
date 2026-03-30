@@ -26,7 +26,9 @@ def obtener_datos():
         if len(cols) >= 3:
             datos.append([
                 cols[0].text.strip(),
-                numero_raw = cols[1].text.strip()
+                for cols in filas:
+    if len(cols) > 1:
+        numero_raw = cols[1].text.strip()
 
 # limpiar solo números
 numero = ''.join(filter(str.isdigit, numero_raw)).zfill(4)

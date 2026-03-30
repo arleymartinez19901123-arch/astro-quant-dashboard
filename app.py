@@ -24,22 +24,22 @@ for f in filas[1:]:
     cols = f.find_all("td")
 
     if len(cols) >= 3:
-        signo = cols[0].text.strip()
         numero_raw = cols[1].text.strip()
 
-        datos.append((signo, numero_raw)) 
+        # limpiar solo números
+        numero = ''.join(filter(str.isdigit, numero_raw)).zfill(4)
 
-# limpiar solo números
-numero = ''.join(filter(str.isdigit, numero_raw)).zfill(4)
-    cols[2].text.strip()
-            ])
-datos.append([
-    cols[0].text.strip(),
-    numero,
-    cols[2].text.strip()
-])df = df[df["Numero"].str.match(r"^\d{4}$")]
-    df = pd.DataFrame(datos, columns=["Fecha", "Numero", "Signo"])
-    return df
+        datos.append([
+            cols[0].text.strip(),  # Fecha
+            numero,                # Numero limpio
+            cols[2].text.strip()  # Signo
+        ])
+
+df = pd.DataFrame(datos, columns=["Fecha", "Numero", "Signo"])
+
+df = df[df["Numero"].str.match(r"^\d{4}$")]
+
+return df
 
 # =========================
 # 🔢 ANALISIS

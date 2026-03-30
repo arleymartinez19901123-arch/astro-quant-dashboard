@@ -18,7 +18,7 @@ def obtener_datos():
     r = requests.get(url)
     soup = BeautifulSoup(r.text, "html.parser")
 
-    def procesar_filas(filas):
+def procesar_filas(filas):
     datos = []
 
     for f in filas[1:]:
@@ -31,9 +31,9 @@ def obtener_datos():
             numero = ''.join(filter(str.isdigit, numero_raw)).zfill(4)
 
             datos.append([
-                cols[0].text.strip(),  # Fecha
-                numero,                # Numero limpio
-                cols[2].text.strip()  # Signo
+                cols[0].text.strip(),
+                numero,
+                cols[2].text.strip()
             ])
 
     df = pd.DataFrame(datos, columns=["Fecha", "Numero", "Signo"])

@@ -18,7 +18,7 @@ def obtener_datos():
     r = requests.get(url)
     soup = BeautifulSoup(r.text, "html.parser")
 
-     datos = []
+      datos = []
 
 for f in filas[1:]:
     cols = f.find_all("td")
@@ -27,7 +27,7 @@ for f in filas[1:]:
         signo = cols[0].text.strip()
         numero_raw = cols[1].text.strip()
 
-        datos.append((signo, numero_raw))  
+        datos.append((signo, numero_raw)) 
 
 # limpiar solo números
 numero = ''.join(filter(str.isdigit, numero_raw)).zfill(4)

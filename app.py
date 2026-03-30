@@ -21,14 +21,14 @@ def obtener_datos():
     datos = []
     filas = soup.select("table tr")
 
-    for f in filas[1:]:
-        cols = f.find_all("td")
-        if len(cols) >= 3:
-            datos.append([
-        (cols[0].text.strip(), cols[1].text.strip())
-for cols in filas
-    if len(cols) > 1:
-        numero_raw = cols[1].text.strip()
+ for f in filas[1:]:
+    cols = f.find_all("td")
+
+    if len(cols) >= 3:
+        datos.append({
+            "signo": cols[0].text.strip(),
+            "numero": cols[1].text.strip()
+        })   
 
 # limpiar solo números
 numero = ''.join(filter(str.isdigit, numero_raw)).zfill(4)

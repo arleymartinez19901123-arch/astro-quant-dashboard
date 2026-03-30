@@ -99,15 +99,24 @@ df = obtener_datos()
 # =========================
 # 🟢 ÚLTIMO RESULTADO
 # =========================
-st.subheader("🟢 Último resultado en tiempo real")
+st.subheader("📈 Histórico reciente")
 
 if not df.empty:
-    ultimo = df.iloc[0]
-    st.success(f"🎯 {ultimo['Numero']} - {ultimo['Signo']}")
-    st.caption(f"📅 Fecha: {ultimo['Fecha']}")
-else:
-    st.error("No se pudieron cargar los datos")
+    df_hist = df.copy()
 
+    # Convertir fecha (evita errores si viene como texto raro)
+    df_hist["Fecha"] = pd.to_datetime(df_hist["Fecha"], errors="coerce")
+
+    # Ordenar por fecha (más reciente arriba)
+    df_hist = df_hist.sort_values(by="Fecha", ascending=False)
+
+    # Resetear índice limpio
+    df_hist = df_hist.reset_index(drop=True)
+
+    # Mostrar solo últimos 50
+    st.dataframe(df_hist.head(50), use_container_width=True)
+else:
+    st.info("No hay datos históricos disponibles")
 # =========================
 # ⏰ ESTADO DEL SORTEO
 # =========================
